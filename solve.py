@@ -56,12 +56,12 @@ for p in personnes:
 
 # chaque personne maximum 5x
 for p in personnes:
-    model.add(sum([horaire[p][d] for d in dates]) <= variables["max_par_personne"])
+    model.add(sum([horaire[p][d] for d in dates]) <= variables["max_par_personne"]*df[p].max())
 
 # une personne ne peut pas venir 2x la même semaine
 for d1, d2 in get_successive_dates(dates):
     for p in personnes:
-        model.add(horaire[p][d1] + horaire[p][d2] <= 1)
+        model.add(horaire[p][d1] + horaire[p][d2] <= df[p].max())
 
 # minimise le nombre de dates pour une personne -> rend le nombre d'ateliers équitables
 max_dates = model.new_int_var(0, len(dates), "max_dates")
@@ -73,7 +73,7 @@ solver = cp_model.CpSolver()
 solver.solve(model)
 
 if solver.response_proto.status in [cp_model.CpSolverStatus.MODEL_INVALID, cp_model.CpSolverStatus.INFEASIBLE]:
-    print(f"Pas de réponse trouvée, erreur: {solver.response_proto.status}")
+    print(f"Pas de solution trouvée, erreur: {solver.response_proto.status}")
     exit()
 elif solver.response_proto.status == cp_model.CpSolverStatus.OPTIMAL:
     print("Solution trouvée, voir fichier de solution !")
